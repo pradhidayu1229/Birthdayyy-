@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Love Notes 🐼🤍🌊</title>
+  <link rel="icon" type="image/png" href="3.png">
+  <link rel='stylesheet' href='https://fonts.googleapis.com/css2?family=Zeyada&family=Titan+One&display=swap'>
+  <style>
+    :root {
+      --color-pink-bg: #feecea;
+      --color-white: #fff;
+      --color-black: #333;
+      --color-text-pink: #ff7882;
+      --color-heart: #f43d67;
+      --font-title: 'Titan One', sans-serif;
+      --font-handwriting: 'Zeyada', cursive;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      height: 100vh;
+      background: var(--color-pink-bg);
+      overflow-x: hidden;
+      font-family: var(--font-handwriting);
+      position: relative;
+    }
+
+    .main-title {
+      text-align: center;
+      font-family: var(--font-title);
+      font-size: 2.5rem;
+      margin: 20px;
+      color: var(--color-text-pink);
+      z-index: 10;
+      position: relative;
+    }
+
+    .cards {
+      position: relative;
+      width: 100%;
+      height: calc(100vh - 80px);
+    }
+
+    .card {
+      position: absolute;
+      background: var(--color-white);
+      border-radius: 12px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+      width: 220px;
+      overflow: hidden;
+      cursor: grab;
+      transition: transform 0.2s;
+    }
+
+    .card:active {
+      cursor: grabbing;
+    }
+
+    .card img {
+      width: 100%;
+      height: 160px;
+      object-fit: cover;
+      pointer-events: none;
+    }
+
+    .card p {
+      padding: 8px;
+      font-size: 1rem;
+      text-align: center;
+      color: var(--color-black);
+      pointer-events: none;
+    }
+
+    /* Popup Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 2000;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      flex-direction: column;
+    }
+
+    .modal-content {
+      background: var(--color-white);
+      padding: 20px;
+      border-radius: 10px;
+      max-width: 90%;
+      max-height: 80%;
+      text-align: center;
+      box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+    }
+
+    .modal-content img {
+      max-width: 100%;
+      max-height: 60vh;
+      border-radius: 10px;
+    }
+
+    .modal-content p {
+      margin-top: 15px;
+      font-size: 1.3rem;
+      color: var(--color-black);
+    }
+
+    .close-btn {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: var(--color-heart);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    /* Balloons */
+    .balloon {
+      position: fixed;
+      bottom: -150px;
+      width: 80px;
+      animation: floatUp linear infinite;
+      z-index: 500;
+      pointer-events: none;
+    }
+
+    @keyframes floatUp {
+      from { transform: translateY(0) rotate(0deg); opacity: 1; }
+      to { transform: translateY(-110vh) rotate(20deg); opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+  <h1 class="main-title">A Few Notes For You ❤️</h1>
+
+  <div class="cards" id="cards"></div>
+
+  <!-- Modal -->
+  <div id="popupModal" class="modal">
+    <div class="modal-content">
+      <img id="popupImg" src="" alt="">
+      <p id="popupText"></p>
+      <button class="close-btn" onclick="closeModal()">Close</button>
+    </div>
+  </div>
+
+  <script>
+    const notesData = [
+      { image: "8.png", text: "And once again... Happy Birthday, yaar! Enjoy every moment of your day." },
+      { image: "7.png", text: "Honestly, I really wished you get graduation this year and level up your career!! Keep going, you’ll reach there soon." },
+      { image: "26.png", text: "Even if my day goes wrong, one chat with you makes it feel right." },
+      { image: "5.png", text: "Your presence has quiet magic — it makes everything better." },
+      { image: "4.png", text: "You’re truly the best girl I’ve ever met." },
+      { image: "18.png", text: "Remember — you’ll always be my favourite person." },
+      { image: "19.png", text: "You have a beautiful and kind soul — inside and out." },
+      { image: "17.png", text: "Your smile is the cutest thing I’ve ever seen." }
+    ];
+
+    const cardsContainer = document.getElementById("cards");
+    const screenW = window.innerWidth;
+    const screenH = window.innerHeight - 100;
+
+    notesData.forEach(note => {
+      const card = document.createElement("div");
+      card.className = "card";
+      card.innerHTML = `
+        <img src="${note.image}" alt="note">
+        <p>${note.text}</p>
+      `;
+
+      // Random scatter effect
+      const x = Math.random() * (screenW - 250);
+      const y = Math.random() * (screenH - 200);
+      const rotation = (Math.random() * 20 - 10);
+
+      card.style.left = `${x}px`;
+      card.style.top = `${y}px`;
+      card.style.transform = `rotate(${rotation}deg)`;
+
+      // Open modal only if double clicked (to not conflict with drag)
+      card.ondblclick = () => openModal(note.image, note.text);
+
+      makeDraggable(card);
+      cardsContainer.appendChild(card);
+    });
+
+    // Modal functions
+    const modal = document.getElementById("popupModal");
+    const popupImg = document.getElementById("popupImg");
+    const popupText = document.getElementById("popupText");
+
+    function openModal(img, text) {
+      popupImg.src = img;
+      popupText.textContent = text;
+      modal.style.display = "flex";
+    }
+    function closeModal() {
+      modal.style.display = "none";
+    }
+
+    // Drag functionality
+    function makeDraggable(el) {
+      let offsetX, offsetY, isDragging = false;
+
+      el.addEventListener("mousedown", e => {
+        isDragging = true;
+        offsetX = e.clientX - el.offsetLeft;
+        offsetY = e.clientY - el.offsetTop;
+        el.style.zIndex = 1000;
+      });
+
+      document.addEventListener("mousemove", e => {
+        if (isDragging) {
+          el.style.left = e.clientX - offsetX + "px";
+          el.style.top = e.clientY - offsetY + "px";
+        }
+      });
+
+      document.addEventListener("mouseup", () => {
+        isDragging = false;
+        el.style.zIndex = "";
+      });
+    }
+
+    // Balloons
+    const balloonImages = ["balloon.png", "cake.png", "cute1.png", "cute2.png", "mewmew.gif", "balloon.png", "balloon1.png", "balloon2.png", "balloon1.png", "balloon.png"];
+    function createBalloon() {
+      const balloon = document.createElement("img");
+      balloon.src = balloonImages[Math.floor(Math.random() * balloonImages.length)];
+      balloon.className = "balloon";
+      balloon.style.left = Math.random() * window.innerWidth + "px";
+      balloon.style.animationDuration = (6 + Math.random()*6) + "s";
+      document.body.appendChild(balloon);
+      setTimeout(() => balloon.remove(), 12000);
+    }
+    setInterval(createBalloon, 1500);
+  </script>
+  <div style="position: fixed; bottom: 20px; right: 20px; display: flex; gap: 10px;">
+    <a href="fourth.html" style="background: #fff; color: #f43d67; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; border: 2px solid #333; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">← Back</a>
+    <a href="sixth.html" style="background: #fff; color: #f43d67; padding: 10px 20px; border-radius: 50px; text-decoration: none; font-weight: bold; border: 2px solid #333; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">Next →</a>
+</div>
+</body>
+</html>
